@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slimnumber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0c;
+    --bg-raised: #131316;
+    --bg-card: #171719;
+    --line: #26232a;
+    --red: #ff2d46;
+    --red-dim: #7a1420;
+    --red-glow: rgba(255,45,70,.35);
+    --text: #ece9e6;
+    --muted: #8b8790;
+    --muted-2: #55525a;
+    --ok: #2de08a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh;}
+  body{
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(255,45,70,.10), transparent 40%),
+      radial-gradient(circle at 90% 20%, rgba(255,45,70,.06), transparent 35%);
+    background-attachment:fixed;
+  }
+  h1,h2,h3, .brand, .num-code{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  a{color:inherit;}
+
+  /* ---------- layout shells ---------- */
+  .screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .hidden{display:none !important;}
+
+  /* ---------- auth ---------- */
+  .auth-card{
+    width:100%; max-width:400px;
+    background:linear-gradient(180deg, var(--bg-raised), var(--bg-card));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:36px 32px 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .auth-card::before{
+    content:"";
+    position:absolute; top:-40%; left:-10%; width:60%; height:180%;
+    background:var(--red-glow);
+    filter:blur(60px);
+    opacity:.35;
+    pointer-events:none;
+  }
+  .brand-row{display:flex; align-items:baseline; gap:10px; margin-bottom:4px; position:relative;}
+  .brand{font-size:26px; font-weight:700; letter-spacing:-0.02em;}
+  .brand .dot{color:var(--red);}
+  .tagline{color:var(--muted); font-size:13px; margin-bottom:28px; position:relative;}
+  .tabs{display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid var(--line); position:relative;}
+  .tab{flex:1; text-align:center; padding:10px 0; font-size:14px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:.15s;}
+  .tab.active{color:var(--text); border-bottom-color:var(--red);}
+  .field{margin-bottom:14px; position:relative;}
+  .field label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted-2); margin-bottom:6px;}
+  .field input{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    padding:11px 12px; border-radius:8px; font-size:14px; font-family:'JetBrains Mono',monospace;
+    outline:none; transition:.15s;
+  }
+  .field input:focus{border-color:var(--red); box-shadow:0 0 0 3px rgba(255,45,70,.12);}
+  .field input::placeholder{color:var(--muted-2); font-family:'Inter',sans-serif;}
+  .btn{
+    width:100%; padding:12px; border-radius:8px; border:none; cursor:pointer;
+    font-size:14px; font-weight:600; letter-spacing:.01em; transition:.15s;
+  }
+  .btn-primary{background:var(--red); color:#160406; margin-top:6px;}
+  .btn-primary:hover{background:#ff445c;}
+  .btn-primary:active{transform:scale(.98);}
+  .form-msg{font-size:12.5px; color:var(--red); min-height:16px; margin-top:10px;}
+  .form-msg.ok{color:var(--ok);}
+  .switch-line{margin-top:18px; font-size:12.5px; color:var(--muted); text-align:center; position:relative;}
+  .switch-line span{color:var(--red); cursor:pointer;}
+
+  /* ---------- app shell ---------- */
+  .app{display:none; min-height:100vh; flex-direction:column;}
+  .app.active{display:flex;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; border-bottom:1px solid var(--line); background:var(--bg-raised);
+    position:sticky; top:0; z-index:5;
+  }
+  .topbar .brand{font-size:19px;}
+  .user-chip{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted);}
+  .user-chip .u{color:var(--text); font-family:'JetBrains Mono',monospace;}
+  .logout{color:var(--muted); font-size:12.5px; cursor:pointer; border:1px solid var(--line); padding:6px 12px; border-radius:7px; transition:.15s;}
+  .logout:hover{color:var(--red); border-color:var(--red-dim);}
+
+  .main{flex:1; width:100%; max-width:1080px; margin:0 auto; padding:28px 24px 60px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;}
+  .section-head h2{font-size:16px; font-weight:600;}
+  .section-head .count{font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .quota{font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .quota b{color:var(--red);}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:10px; margin-bottom:40px;}
+
+  .card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:10px;
+    padding:14px 14px 12px; position:relative; transition:.15s;
+  }
+  .card.mine{border-color:var(--red-dim); background:linear-gradient(180deg, rgba(255,45,70,.06), var(--bg-card));}
+  .card.blocked{opacity:.35;}
+  .card-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .led{width:7px; height:7px; border-radius:50%; background:var(--muted-2); box-shadow:0 0 0 rgba(0,0,0,0);}
+  .led.free{background:var(--ok); box-shadow:0 0 6px rgba(45,224,138,.6);}
+  .led.mine{background:var(--red); box-shadow:0 0 6px var(--red-glow);}
+  .led.blocked{background:#4a4a4a;}
+  .status-text{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted-2);}
+  .num-main{font-size:16.5px; font-weight:600; letter-spacing:.01em; margin-bottom:2px;}
+  .num-code{font-size:12.5px; color:var(--muted); letter-spacing:.04em; min-height:16px;}
+  .num-code .revealed{color:var(--ok);}
+  .num-code .masked{letter-spacing:.15em;}
+
+  .card-actions{display:flex; gap:6px; margin-top:12px;}
+  .mini-btn{
+    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    font-size:11.5px; padding:7px 4px; border-radius:6px; cursor:pointer; transition:.15s;
+    font-family:'Inter',sans-serif;
+  }
+  .mini-btn:hover{border-color:var(--red); color:var(--red);}
+  .mini-btn.danger:hover{border-color:#ff445c; color:#ff445c;}
+  .mini-btn.warn:hover{border-color:#e0a72d; color:#e0a72d;}
+  .take-btn{
+    width:100%; margin-top:12px; background:transparent; border:1px solid var(--red-dim); color:var(--red);
+    font-size:12px; padding:8px; border-radius:6px; cursor:pointer; transition:.15s; font-family:'Inter',sans-serif; font-weight:500;
+  }
+  .take-btn:hover{background:var(--red); color:#160406; border-color:var(--red);}
+  .take-btn:disabled{opacity:.3; cursor:not-allowed;}
+  .take-btn:disabled:hover{background:transparent; color:var(--red);}
+
+  .empty{color:var(--muted-2); font-size:13px; padding:20px 0; text-align:center; border:1px dashed var(--line); border-radius:10px;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--bg-raised); border:1px solid var(--red-dim); color:var(--text);
+    padding:11px 20px; border-radius:8px; font-size:13px; opacity:0; transition:.25s;
+    pointer-events:none; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:520px){
+    .auth-card{padding:28px 20px 24px;}
+    .topbar{padding:14px 16px;}
+    .main{padding:20px 14px 50px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="screen" id="authScreen">
+  <div class="auth-card">
+    <div class="brand-row"><div class="brand">Slim<span class="dot">•</span>number</div></div>
+    <div class="tagline">Приватные номера. Выдаём код — вы решаете, что дальше.</div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="login">Вход</div>
+      <div class="tab" data-tab="register">Регистрация</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="loginUsername" placeholder="@username">
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="loginBtn">Войти</button>
+      <div class="form-msg" id="loginMsg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerForm" class="hidden">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="you@mail.com">
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="regUsername" placeholder="@username">
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <input type="password" id="regPassword" placeholder="минимум 4 символа">
+      </div>
+      <button class="btn btn-primary" id="registerBtn">Создать аккаунт</button>
+      <div class="form-msg" id="registerMsg"></div>
+    </div>
+
+    <div class="switch-line" id="switchLine">Нет аккаунта? <span id="toRegister">Зарегистрироваться</span></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand">Slim<span class="dot" style="color:var(--red)">•</span>number</div>
+    <div class="user-chip">
+      <span>Вы вошли как <span class="u" id="whoami"></span></span>
+      <span class="logout" id="logoutBtn">Выйти</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="section-head">
+      <h2>Мои номера</h2>
+      <span class="quota" id="quotaText">0 / 5 занято</span>
+    </div>
+    <div class="grid" id="mineGrid"></div>
+
+    <div class="section-head">
+      <h2>Доступные номера</h2>
+      <span class="count" id="availCount"></span>
+    </div>
+    <div class="grid" id="poolGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  const RAW_NUMBERS = `
++666 78137 | 34389
++666 10482 | 91825
++666 59371 | 47206
++666 24865 | 13097
++666 91730 | 68541
++666 35614 | 25480
++666 82059 | 79163
++666 47183 | 50214
++666 69520 | 84637
++666 13247 | 31895
++666 50496 | 75021
++666 28713 | 19468
++666 96381 | 82530
++666 41075 | 46792
++666 75824 | 20943
++666 31906 | 63485
++666 68291 | 91704
++666 14538 | 38162
++666 89042 | 74618
++666 53716 | 12597
++666 27480 | 85340
++666 61835 | 49071
++666 95327 | 21684
++666 40619 | 57238
++666 78102 | 93846
++666 21468 | 30195
++666 56930 | 68412
++666 83217 | 14783
++666 19584 | 79520
++666 64751 | 42689
++666 30829 | 56017
++666 97463 | 81235
++666 52108 | 27396
++666 16395 | 64820
++666 48672 | 93451
++666 73014 | 18563
++666 25891 | 70924
++666 84560 | 35218
++666 61937 | 89470
++666 17284 | 24156
++666 93415 | 68703
++666 50782 | 41985
++666 26149 | 97042
++666 78356 | 13689
++666 14027 | 75831
++666 69248 | 50476
++666 31579 | 82364
++666 85194 | 29015
++666 42860 | 64197
++666 97031 | 38742
+`;
+
+  function parseNumbers(){
+    return RAW_NUMBERS.trim().split('\n').map((line, i) => {
+      const [main, code] = line.split('|').map(s => s.trim());
+      return { id: 'n'+i, main, code, owner: null, blocked: false };
+    });
+  }
+
+  const MAX_OWNED = 5;
+  let currentUser = null; // {username, email}
+  let usersDB = {};        // username -> {email, password}
+  let numbersPool = [];    // array of number objects
+
+  const $ = (id) => document.getElementById(id);
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h = setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  async function loadState(){
+    try{
+      const u = await window.storage.get('users', true);
+      usersDB = u ? JSON.parse(u.value) : {};
+    }catch(e){ usersDB = {}; }
+
+    try{
+      const n = await window.storage.get('numbers-pool', true);
+      numbersPool = n ? JSON.parse(n.value) : parseNumbers();
+    }catch(e){
+      numbersPool = parseNumbers();
+    }
+    if(!numbersPool.length){ numbersPool = parseNumbers(); }
+    await saveNumbers();
+  }
+
+  async function saveUsers(){
+    try{ await window.storage.set('users', JSON.stringify(usersDB), true); }
+    catch(e){ console.error('save users failed', e); }
+  }
+
+  async function saveNumbers(){
+    try{ await window.storage.set('numbers-pool', JSON.stringify(numbersPool), true); }
+    catch(e){ console.error('save numbers failed', e); }
+  }
+
+  // ---------- AUTH UI ----------
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
+  $('toRegister').addEventListener('click', () => setTab('register'));
+
+  function setTab(name){
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    $('loginForm').classList.toggle('hidden', name !== 'login');
+    $('registerForm').classList.toggle('hidden', name !== 'register');
+    $('switchLine').innerHTML = name === 'login'
+      ? 'Нет аккаунта? <span id="toRegister">Зарегистрироваться</span>'
+      : 'Уже есть аккаунт? <span id="toLogin">Войти</span>';
+    const alt = $('toRegister') || $('toLogin');
+    if(name === 'login'){
+      document.getElementById('toRegister').addEventListener('click', () => setTab('register'));
+    } else {
+      document.getElementById('toLogin').addEventListener('click', () => setTab('login'));
+    }
+    $('loginMsg').textContent = '';
+    $('registerMsg').textContent = '';
+  }
+
+  function normalizeUsername(v){
+    v = v.trim();
+    if(!v) return '';
+    if(!v.startsWith('@')) v = '@' + v;
+    return v;
+  }
+
+  $('registerBtn').addEventListener('click', async () => {
+    const email = $('regEmail').value.trim();
+    const username = normalizeUsername($('regUsername').value);
+    const password = $('regPassword').value;
+    const msg = $('registerMsg');
+    msg.className = 'form-msg';
+
+    if(!email || !email.includes('@') || email.startsWith('@') === false && !email.includes('.')){
+      // basic sanity check only
+    }
+    if(!email || !username || username === '@' || !password){
+      msg.textContent = 'Заполните все поля.';
+      return;
+    }
+    if(!/^\S+@\S+\.\S+$/.test(email)){
+      msg.textContent = 'Некорректный email.';
+      return;
+    }
+    if(password.length < 4){
+      msg.textContent = 'Пароль минимум 4 символа.';
+      return;
+    }
+    if(usersDB[username]){
+      msg.textContent = 'Такой username уже занят.';
+      return;
+    }
+    usersDB[username] = { email, password };
+    await saveUsers();
+    msg.className = 'form-msg ok';
+    msg.textContent = 'Готово! Теперь войдите.';
+    setTimeout(() => {
+      setTab('login');
+      $('loginUsername').value = username;
+    }, 700);
+  });
+
+  $('loginBtn').addEventListener('click', async () => {
+    const username = normalizeUsername($('loginUsername').value);
+    const password = $('loginPassword').value;
+    const msg = $('loginMsg');
+    msg.className = 'form-msg';
+    const rec = usersDB[username];
+    if(!rec || rec.password !== password){
+      msg.textContent = 'Неверный username или пароль.';
+      return;
+    }
+    currentUser = { username, email: rec.email };
+    enterApp();
+  });
+
+  $('logoutBtn').addEventListener('click', () => {
+    currentUser = null;
+    $('app').classList.remove('active');
+    $('authScreen').classList.remove('hidden');
+    $('loginPassword').value = '';
+  });
+
+  // ---------- APP ----------
+  function enterApp(){
+    $('authScreen').classList.add('hidden');
+    $('app').classList.add('active');
+    $('whoami').textContent = currentUser.username;
+    render();
+  }
+
+  function myNumbers(){
+    return numbersPool.filter(n => n.owner === currentUser.username && !n.blocked);
+  }
+  function availableNumbers(){
+    return numbersPool.filter(n => !n.owner && !n.blocked);
+  }
+
+  function render(){
+    const mine = myNumbers();
+    const avail = availableNumbers();
+
+    $('quotaText').innerHTML = `${mine.length} / ${MAX_OWNED} занято`;
+    $('availCount').textContent = avail.length + ' свободно';
+
+    // mine grid
+    const mineGrid = $('mineGrid');
+    mineGrid.innerHTML = '';
+    if(!mine.length){
+      mineGrid.innerHTML = '<div class="empty">Пока нет занятых номеров — выберите из списка ниже.</div>';
+    } else {
+      mine.forEach(n => mineGrid.appendChild(renderMineCard(n)));
+    }
+
+    // pool grid
+    const poolGrid = $('poolGrid');
+    poolGrid.innerHTML = '';
+    if(!avail.length){
+      poolGrid.innerHTML = '<div class="empty">Свободных номеров не осталось.</div>';
+    } else {
+      avail.forEach(n => poolGrid.appendChild(renderPoolCard(n)));
+    }
+  }
+
+  function renderPoolCard(n){
+    const card = document.createElement('div');
+    card.className = 'card';
+    const atLimit = myNumbers().length >= MAX_OWNED;
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="led free"></span>
+        <span class="status-text">свободен</span>
+      </div>
+      <div class="num-main mono">${n.main}</div>
+      <div class="num-code mono"><span class="masked">••••• скрыт</span></div>
+      <button class="take-btn" ${atLimit ? 'disabled' : ''}>${atLimit ? 'Лимит 5 достигнут' : 'Взять номер'}</button>
+    `;
+    const btn = card.querySelector('.take-btn');
+    if(!atLimit){
+      btn.addEventListener('click', async () => {
+        if(myNumbers().length >= MAX_OWNED){ toast('Можно занять максимум 5 номеров'); render(); return; }
+        n.owner = currentUser.username;
+        await saveNumbers();
+        toast(`Номер ${n.main} закреплён за вами`);
+        render();
+      });
+    }
+    return card;
+  }
+
+  function renderMineCard(n){
+    const card = document.createElement('div');
+    card.className = 'card mine';
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="led mine"></span>
+        <span class="status-text">ваш номер</span>
+      </div>
+      <div class="num-main mono">${n.main}</div>
+      <div class="num-code mono" id="code-${n.id}"><span class="masked">••••• нажмите «Код»</span></div>
+      <div class="card-actions">
+        <button class="mini-btn code-btn">Код</button>
+        <button class="mini-btn danger del-btn">Удалить</button>
+        <button class="mini-btn warn block-btn">Заблокировать</button>
+      </div>
+    `;
+    card.querySelector('.code-btn').addEventListener('click', () => {
+      $(`code-${n.id}`).innerHTML = `<span class="revealed">${n.code}</span>`;
+    });
+    card.querySelector('.del-btn').addEventListener('click', async () => {
+      n.owner = null;
+      await saveNumbers();
+      toast(`Номер ${n.main} возвращён в пул`);
+      render();
+    });
+    card.querySelector('.block-btn').addEventListener('click', async () => {
+      n.blocked = true;
+      await saveNumbers();
+      toast(`Номер ${n.main} заблокирован`);
+      render();
+    });
+    return card;
+  }
+
+  // ---------- boot ----------
+  (async function boot(){
+    await loadState();
+  })();
+
+})();
+</script>
+</body>
+</html>
